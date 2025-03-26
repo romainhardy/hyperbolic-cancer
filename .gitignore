@@ -1,6 +1,7 @@
 chkpt/*
 data/*
 ffmpeg*
+hyperbolics/*
 mvae/*
 Mixed-Curvature-Pathways/*
 PoincareMaps/*
