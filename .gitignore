@@ -1,3 +1,9 @@
+chkpt/*
+data/*
+ffmpeg*
+hyperbolics/*
+models/*
+mvae/*
 Mixed-Curvature-Pathways/*
 PoincareMaps/*
 scPhere/*
