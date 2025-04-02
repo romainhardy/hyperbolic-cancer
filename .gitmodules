@@ -1,0 +1,3 @@
+[submodule "src/mvae"]
+	path = src/mvae
+	url = https://github.com/oskopek/mvae.git
