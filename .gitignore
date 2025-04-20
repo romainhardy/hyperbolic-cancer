@@ -7,4 +7,4 @@ Mixed-Curvature-Pathways/*
 PoincareMaps/*
 scPhere/*
 wandb/*
-__pycache__/*
+**/__pycache__/
