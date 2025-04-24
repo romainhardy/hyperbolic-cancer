@@ -31,7 +31,6 @@ class WrappedNormal(torch.distributions.Distribution, VaeDistribution):
     has_rsample = True
 
     def __init__(self, loc: Tensor, scale: Tensor, manifold: Manifold, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
         self.dim = loc.shape[-1]
 
         # is projected?
@@ -58,6 +57,7 @@ class WrappedNormal(torch.distributions.Distribution, VaeDistribution):
         self.device = self.loc.device
         smaller_shape = self.loc.shape[:-1] + torch.Size([tangent_dim])
         self.normal = EuclideanNormal(torch.zeros(smaller_shape, device=self.device), scale, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def mean(self) -> Tensor:

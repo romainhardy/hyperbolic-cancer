@@ -1,4 +1,4 @@
-experiment: lung_mvae
+experiment: lung_mvae_e10h10s10
 output_dir: /home/romainlhardy/code/hyperbolic-cancer/models/mvae
 
 optimizer:
@@ -6,7 +6,7 @@ optimizer:
   options:
     lr: 1.0e-3
     betas: [0.9, 0.999]
-    weight_decay: 0.01
+    weight_decay: 1.0e-5
     eps: 0.01
 
 scheduler:
@@ -30,7 +30,7 @@ lightning:
     options:
       encoder_layer: [128, 64, 32]
       decoder_layer: [32, 128]
-      batch_invariant: false
+      batch_invariant: true
       observation_dist: nb
       scalar_parametrization: true
       beta: 1.0
