@@ -50,7 +50,7 @@ class ModelVAE(torch.nn.Module):
         super().__init__()
         self.device = torch.device("cpu")
         self.components = nn.ModuleList(components)
-        self.reconstruction_loss = dataset.reconstruction_loss
+        # self.reconstruction_loss = dataset.reconstruction_loss
 
         self.total_z_dim = sum(component.dim for component in components)
         for component in components:

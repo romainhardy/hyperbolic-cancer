@@ -1,4 +1,4 @@
-experiment: lung_mvae_e2h2s2
+experiment: lung_mvae_e2
 output_dir: /home/romainlhardy/code/hyperbolic-cancer/models/mvae
 
 optimizer:
@@ -25,7 +25,7 @@ data:
 
 lightning:
   model:
-    components: e2,h2,s2
+    components: e2
     fixed_curvature: true
     options:
       encoder_layer: [128, 64, 32]
