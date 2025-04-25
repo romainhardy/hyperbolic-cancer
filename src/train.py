@@ -49,7 +49,8 @@ def main():
     )
 
     # Lightning module
-    config["lightning"]["model"]["options"]["n_gene"] = dataset.n_gene
+    config["lightning"]["model"]["options"]["n_gene_r"] = dataset.n_gene_r
+    config["lightning"]["model"]["options"]["n_gene_p"] = dataset.n_gene_p
     config["lightning"]["model"]["options"]["n_batch"] = dataset.n_batch
     module = GeneModule(config)
     

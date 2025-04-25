@@ -20,6 +20,11 @@ data:
     mtx_path: /home/romainlhardy/code/hyperbolic-cancer/data/lung/Exp_data_UMIcounts.mtx
     batch_paths:
       - /home/romainlhardy/code/hyperbolic-cancer/data/lung/batch.tsv
+    preprocessing_options:
+      normalize: true
+      log1p: true
+      top_genes: 2000
+      scale: true
   batch_size: 256
   num_workers: 8
 
