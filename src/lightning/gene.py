@@ -55,13 +55,13 @@ class GeneModule(pl.LightningModule):
         return optimizers, [net_scheduler]
     
     def training_step(self, batch):
-        x, batch_idx = batch
-        outputs = self.model.forward(x, batch_idx)
+        x_r, x_p, batch_idx = batch
+        outputs = self.model.forward(x_r, x_p, batch_idx)
         elbo = outputs["elbo"].mean()
-        depth_reg = outputs["depth_reg"].mean()
+        reg = outputs["reg"].mean()
         kl = outputs["kl_divergence"].mean()
         ll = outputs["log_likelihood"].mean()
-        loss = -elbo + depth_reg
+        loss = -elbo + reg
 
         optimizers = self.optimizers()
         net_optimizer, ncurv_optimizer, pcurv_optimizer = optimizers
@@ -81,7 +81,7 @@ class GeneModule(pl.LightningModule):
             pcurv_optimizer.step()
 
         self.log("train/elbo", elbo, on_step=True, on_epoch=True, sync_dist=True)
-        self.log("train/depth_reg", depth_reg, on_step=True, on_epoch=True, sync_dist=True)
+        self.log("train/reg", reg, on_step=True, on_epoch=True, sync_dist=True)
         self.log("train/kl", kl, on_step=True, on_epoch=True, sync_dist=True)
         self.log("train/ll", ll, on_step=True, on_epoch=True, sync_dist=True)
         self.log("train/loss", loss, on_step=True, on_epoch=True, sync_dist=True)
@@ -93,16 +93,16 @@ class GeneModule(pl.LightningModule):
         return {"loss": loss}
     
     def validation_step(self, batch):
-        x, batch_idx = batch
-        outputs = self.model.forward(x, batch_idx)
+        x_r, x_p, batch_idx = batch
+        outputs = self.model.forward(x_r, x_p, batch_idx)
         elbo = outputs["elbo"].mean()
-        depth_reg = outputs["depth_reg"].mean()
+        reg = outputs["reg"].mean()
         kl = outputs["kl_divergence"].mean()
         ll = outputs["log_likelihood"].mean()
-        loss = -elbo + depth_reg
+        loss = -elbo + reg
 
         self.log("valid/elbo", elbo, on_step=False, on_epoch=True, sync_dist=True)
-        self.log("valid/depth_reg", depth_reg, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("valid/reg", reg, on_step=False, on_epoch=True, sync_dist=True)
         self.log("valid/kl", kl, on_step=False, on_epoch=True, sync_dist=True)
         self.log("valid/ll", ll, on_step=False, on_epoch=True, sync_dist=True)
         self.log("valid/loss", loss, on_step=False, on_epoch=True, sync_dist=True)
