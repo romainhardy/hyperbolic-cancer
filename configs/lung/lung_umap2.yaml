@@ -10,7 +10,7 @@ model:
   preprocess:
     normalize: true
     log1p: true
-    top_genes: 2000
+    top_genes: 5000
     scale: true
   pca:
     n_comps: 50
@@ -18,7 +18,7 @@ model:
     theta: 2.0
     max_iter_harmony: 15
   neighbors:
-    n_neighbors: 15
+    n_neighbors: 25
     metric: euclidean
   umap:
     n_components: 2

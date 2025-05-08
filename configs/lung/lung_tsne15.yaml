@@ -1,0 +1,30 @@
+experiment: lung_tsne15
+output_dir: /home/romainlhardy/code/hyperbolic-cancer/models/tsne
+
+data:
+  mtx_path: /home/romainlhardy/code/hyperbolic-cancer/data/lung/Exp_data_UMIcounts.mtx
+  batch_paths:
+    - /home/romainlhardy/code/hyperbolic-cancer/data/lung/batch.tsv
+
+model:
+  preprocess:
+    normalize: true
+    log1p: true
+    top_genes: 5000
+    scale: true
+  pca:
+    n_comps: 50
+  harmony:
+    theta: 2.0
+    max_iter_harmony: 15
+  neighbors:
+    n_neighbors: 15
+    metric: euclidean
+  tsne:
+    n_components: 15
+    method: exact
+    perplexity: 30
+    learning_rate: auto
+    metric: euclidean
+    random_state: 32
+    n_jobs: -1

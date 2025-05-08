@@ -37,7 +37,8 @@ class HypersphericalUniform(torch.distributions.Distribution, VaeDistribution):
         self.normal = EuclideanNormal(0, 1)
 
     def rsample(self, sample_shape: torch.Size = torch.Size()) -> Tensor:
-        output = self.normal.sample(sample_shape + torch.Size([1, self.dim + 1])).to(self.device)
+        # output = self.normal.sample(sample_shape + torch.Size([1, self.dim + 1])).to(self.device)
+        output = self.normal.sample(sample_shape + torch.Size([self.dim + 1])).to(self.device)
         return F.normalize(output, dim=-1)
 
     def entropy(self) -> Tensor:

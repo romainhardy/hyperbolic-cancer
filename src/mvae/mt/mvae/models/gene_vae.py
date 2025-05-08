@@ -8,12 +8,78 @@ from torch import Tensor
 from typing import List, Union
 
 
+class ResidualBlock(nn.Module):
+
+    def __init__(
+        self, 
+        in_features: int, 
+        out_features: int, 
+        dropout_rate: float = 0.1, 
+        use_bn: bool = True
+    ):
+        super().__init__()
+        self.use_bn = use_bn
+        
+        self.linear1 = nn.Linear(in_features, out_features)
+        self.bn1 = nn.BatchNorm1d(out_features) if use_bn else nn.Identity()
+        self.act1 = nn.ELU()
+        self.dropout = nn.Dropout(dropout_rate)
+        
+        self.linear2 = nn.Linear(out_features, out_features)
+        self.bn2 = nn.BatchNorm1d(out_features) if use_bn else nn.Identity()
+
+        if in_features != out_features:
+            self.shortcut_transform = nn.Linear(in_features, out_features)
+            self.shortcut_bn = nn.BatchNorm1d(out_features) if use_bn else nn.Identity()
+            self.shortcut = lambda x: self.shortcut_bn(self.shortcut_transform(x))
+        else:
+            self.shortcut = nn.Identity()
+        
+        self.final_act = nn.ELU()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = self.shortcut(x)
+        
+        out = self.linear1(x)
+        out = self.bn1(out)
+        out = self.act1(out)
+        out = self.dropout(out)
+        
+        out = self.linear2(out)
+        out = self.bn2(out)
+        
+        out += residual
+        out = self.final_act(out)
+        return out
+
+
+class ResNet(nn.Module):
+
+    def __init__(
+        self, 
+        in_dim: int, 
+        layer_sizes: list[int], 
+        dropout_rate: float, 
+        use_bn: bool = True
+    ):
+        super().__init__()
+        self.blocks = nn.ModuleList()
+        current_dim = in_dim
+        for units in layer_sizes:
+            self.blocks.append(ResidualBlock(current_dim, units, dropout_rate, use_bn))
+            current_dim = units
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        for block in self.blocks:
+            x = block(x)
+        return x
+
+
 class GeneVAE(ModelVAE):
 
     def __init__(
         self, 
-        n_gene_r: int,
-        n_gene_p: int,
+        n_gene: int,
         n_batch: Union[int, List[int]],
         batch_invariant: bool,
         observation_dist: str,
@@ -24,8 +90,7 @@ class GeneVAE(ModelVAE):
         beta: float = 1.0
     ) -> None:
         super().__init__(encoder_layer[-1], components, None, scalar_parametrization)
-        self.n_gene_r = n_gene_r # Input genes
-        self.n_gene_p = n_gene_p # Output genes
+        self.n_gene = n_gene
         if isinstance(n_batch, int):
             self.n_batch = [n_batch]
         else:
@@ -36,13 +101,13 @@ class GeneVAE(ModelVAE):
         self.decoder_layer = decoder_layer
         self.beta = beta
 
-        self.x_dim = n_gene_p + sum(n_batch) if not batch_invariant else n_gene_p
+        self.x_dim = n_gene + sum(n_batch) if not batch_invariant else n_gene
         self.z_dim = sum(component.dim for component in components) + sum(n_batch)
 
         self.encoder = self._build_encoder()
         self.decoder = self._build_decoder()
-        self.fc_mu_logits = nn.Linear(self.decoder_layer[-1], self.n_gene_r)
-        self.fc_sigma_logits = nn.Linear(self.decoder_layer[-1], self.n_gene_r)
+        self.fc_mu_logits = nn.Linear(self.decoder_layer[-1], self.n_gene)
+        self.fc_sigma_logits = nn.Linear(self.decoder_layer[-1], self.n_gene)
 
     def _build_encoder(self):
         in_features = self.x_dim
@@ -70,10 +135,12 @@ class GeneVAE(ModelVAE):
             one_hots.append(F.one_hot(batch_idx[:, i], num_classes=depth))
         return torch.cat(one_hots, dim=1).float()
     
-    def _prepare_inputs(self, x_r: Tensor, x_p: Tensor, batch_idx: Tensor) -> Tensor:
-        library_size = x_r.sum(dim=-1, keepdim=True)
+    def _prepare_inputs(self, x: Tensor, batch_idx: Tensor) -> Tensor:
+        library_size = x.sum(dim=-1, keepdim=True)
         batch = self._multi_one_hot(batch_idx, self.n_batch)
-        return x_p, batch, library_size
+        x = torch.log1p(x)
+        x = torch.nn.functional.normalize(x, p=2, dim=-1)
+        return x, batch, library_size
     
     def _encode(self, x: Tensor, batch: Tensor) -> Tensor:
         if not self.batch_invariant:
@@ -108,14 +175,15 @@ class GeneVAE(ModelVAE):
         kl = torch.sum(torch.cat([x.unsqueeze(dim=-1) for x in kl_components], dim=-1), dim=-1)
         return kl
 
-    def forward(self, x_r: Tensor, x_p: Tensor, batch_idx: Tensor) -> dict:
-        x0, batch, library_size = self._prepare_inputs(x_r, x_p, batch_idx)
+    def forward(self, x: Tensor, batch_idx: Tensor) -> dict:
+        x0, batch, library_size = self._prepare_inputs(x, batch_idx)
         h0 = self._encode(x0, batch)
 
-        noise = torch.randn_like(x_p) * 0.1
-        x1 = x0 + noise
+        samples = torch.poisson(x * 0.2)
+        x1 = F.relu(x - samples)
+        x1, _, _ = self._prepare_inputs(x1, batch_idx)
         h1 = self._encode(x1, batch)
-        reg = torch.sum((h0 - h1) ** 2, dim=-1) # Noise regularization
+        reg = torch.sum((h0 - h1) ** 2, dim=-1)
 
         reparametrized = []
         for component in self.components:
@@ -123,10 +191,10 @@ class GeneVAE(ModelVAE):
             z, data = q_z.rsample_with_parts()
             reparametrized.append(Reparametrized(q_z, p_z, z, data))
 
-        z_concat = torch.cat([r.z for r in reparametrized], dim=-1)
+        z_concat = torch.cat([x.z for x in reparametrized], dim=-1)
         mu, sigma = self._decode(z_concat, batch, library_size)
 
-        ll = self.log_likelihood(x_r, mu, sigma)
+        ll = self.log_likelihood(x, mu, sigma)
         kl = self.kl_divergence(reparametrized)
         elbo = ll - self.beta * kl
 
