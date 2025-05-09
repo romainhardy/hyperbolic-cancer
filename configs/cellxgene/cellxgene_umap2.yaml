@@ -1,0 +1,24 @@
+experiment: cellxgene_umap2
+output_dir: /home/romainlhardy/code/hyperbolic-cancer/models/umap
+
+data:
+  mtx_path: /home/romainlhardy/code/hyperbolic-cancer/data/cellxgene/cellxgene_sample_counts.mtx
+  batch_paths:
+    - /home/romainlhardy/code/hyperbolic-cancer/data/cellxgene/cellxgene_sample_batch.tsv
+
+model:
+  preprocess:
+    normalize: false
+    log1p: true
+    top_genes: null
+    scale: true
+  pca:
+    n_comps: 50
+  harmony:
+    theta: 2.0
+    max_iter_harmony: 15
+  neighbors:
+    n_neighbors: 15
+    metric: euclidean
+  umap:
+    n_components: 2

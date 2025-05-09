@@ -20,6 +20,7 @@ import torch
 
 eps = 1e-8  # TODO: Move this lower for doubles?
 max_norm = 85
+# max_norm = 10
 ln_2: torch.Tensor = math.log(2)
 ln_pi: torch.Tensor = math.log(math.pi)
 ln_2pi: torch.Tensor = ln_2 + ln_pi

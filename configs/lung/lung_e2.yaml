@@ -12,7 +12,7 @@ optimizer:
 scheduler:
   class: OneCycleLR
   options:
-    epochs: 1000
+    epochs: 100
     pct_start: 0.1
 
 data:
@@ -20,11 +20,6 @@ data:
     mtx_path: /home/romainlhardy/code/hyperbolic-cancer/data/lung/Exp_data_UMIcounts.mtx
     batch_paths:
       - /home/romainlhardy/code/hyperbolic-cancer/data/lung/batch.tsv
-    preprocessing_options:
-      normalize: true
-      log1p: true
-      top_genes: 2000
-      scale: true
   batch_size: 256
   num_workers: 8
 
@@ -41,7 +36,7 @@ lightning:
       beta: 1.0
 
 trainer:
-  max_epochs: 1000
+  max_epochs: 100
   log_every_n_steps: 50
   enable_progress_bar: false
   precision: 32

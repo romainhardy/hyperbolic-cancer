@@ -1,0 +1,45 @@
+experiment: cellxgene_mvae_e2h2s2
+output_dir: /home/romainlhardy/code/hyperbolic-cancer/models/mvae
+
+optimizer:
+  class: Adam
+  options:
+    lr: 1.0e-3
+    betas: [0.9, 0.999]
+    weight_decay: 0.01
+    eps: 0.01
+
+scheduler:
+  class: OneCycleLR
+  options:
+    epochs: 10
+    pct_start: 0.1
+
+data:
+  options:
+    mtx_path: /home/romainlhardy/code/hyperbolic-cancer/data/cellxgene/cellxgene_counts.mtx
+    batch_paths:
+      - /home/romainlhardy/code/hyperbolic-cancer/data/cellxgene/cellxgene_batch.tsv
+  batch_size: 64
+  num_workers: 8
+
+lightning:
+  model:
+    components: e2,h2,s2
+    fixed_curvature: true
+    options:
+      encoder_layer: [128, 64, 32]
+      decoder_layer: [32, 128]
+      batch_invariant: true
+      observation_dist: nb
+      scalar_parametrization: true
+      beta: 1.0
+
+trainer:
+  max_epochs: 10
+  log_every_n_steps: 50
+  enable_progress_bar: false
+  precision: 32
+  accelerator: gpu
+  devices: 2
+  strategy: ddp_find_unused_parameters_false

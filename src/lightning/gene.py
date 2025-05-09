@@ -55,8 +55,8 @@ class GeneModule(pl.LightningModule):
         return optimizers, [net_scheduler]
     
     def training_step(self, batch):
-        x_r, x_p, batch_idx = batch
-        outputs = self.model.forward(x_r, x_p, batch_idx)
+        x, batch_idx = batch
+        outputs = self.model.forward(x, batch_idx)
         elbo = outputs["elbo"].mean()
         reg = outputs["reg"].mean()
         kl = outputs["kl_divergence"].mean()

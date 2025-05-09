@@ -52,7 +52,8 @@ class WrappedNormal(torch.distributions.Distribution, VaeDistribution):
         assert tangent_dim == scale.shape[-1]
 
         self.loc = loc
-        self.scale = scale
+        # self.scale = scale
+        self.scale = torch.clamp(scale, min=1e-5)
         self.manifold = manifold
         self.device = self.loc.device
         smaller_shape = self.loc.shape[:-1] + torch.Size([tangent_dim])

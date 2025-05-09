@@ -69,7 +69,8 @@ class VonMisesFisher(torch.distributions.Distribution, VaeDistribution):
         w = self._sample_w3(shape=shape) if self.p == 3 else self._sample_w_rej(shape=shape)
 
         # Sample v ~ U(S^(m-2))
-        v = self.hyperspherical_uniform_v.sample(shape)
+        # v = self.hyperspherical_uniform_v.sample(shape)
+        v = self.hyperspherical_uniform_v.rsample(shape + torch.Size(self.scale.shape)).squeeze(1)
 
         w_ = C.sqrt(1 - w**2)
         x = torch.cat((w, w_ * v), dim=-1)
@@ -136,7 +137,8 @@ class VonMisesFisher(torch.distributions.Distribution, VaeDistribution):
         return z
 
     def entropy(self) -> Tensor:
-        ive_ = ive((self.p / 2) - 1, self.scale)
+        # ive_ = ive((self.p / 2) - 1, self.scale)
+        ive_ = torch.clamp(ive((self.p / 2) - 1, self.scale), min=1e-5)
         output = -self.scale * ive(self.p / 2, self.scale) / ive_
         return output.view(*(output.shape[:-1])) - self._c_p_kappa(self.scale, p=self.p, ive_precomp=ive_)
 
