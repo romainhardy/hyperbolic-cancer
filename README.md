@@ -10,7 +10,7 @@ python3 -m src.train --config <path/to/config/file>
 ```
 
 ## Code
-The model and dataset implementations are located at `src/mvae/mt/mvae/models/gene_vae.py` and `src/mvae/mt/data/gene_dataset.py`, respectively.
+The model and dataset implementations are located at `src/mvae/mt/mvae/models/gene_vae.py` and `src/mvae/mt/data/gene_dataset.py`, respectively. Evaluation scripts can be found in the `notebooks` folder.
 
 ## Acknowledgements
 This repository borrows from the work of [Skopec et al. (2019)](https://github.com/oskopek/mvae).
